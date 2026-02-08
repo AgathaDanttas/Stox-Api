@@ -1,13 +1,13 @@
 import { Request,Response } from "express";
-import { registerComapanyService } from "./company.service";
+import { registerCompanyService } from "./company.service";
 
-export async function registerComapny(req:Request, res:Response){
+export async function registerCompany(req:Request, res:Response){
     try {
         const data = req.body;  
 
-        await registerComapanyService(data);
+        const company = await registerCompanyService(data);
 
-        return res.status(201).json({message: "Empresa cadastrada com sucesso"});
+        return res.status(201).json({message: `Empresa cadastrada com sucesso: ${company}`});
     } catch (error) {
         return res.status(400).json({error:"Erro ao cadastrar empresa"});
     }
