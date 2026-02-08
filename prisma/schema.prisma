@@ -3,16 +3,53 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
-
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
-
 model Company {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  nameReason  String
+  nameFantasy String
+  cnpj        String   @unique
+  email       String   @unique
+  typeBranch  String
+  createdAt   DateTime @default(now())
+
+  representatives Representative[]
+  users           User[]
+}
+
+model Representative {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  email     String   @unique
+  fullname  String
+  email     String
+  phone     String
+  position  String
   createdAt DateTime @default(now())
+
+  companyId String  @db.ObjectId
+  company   Company @relation(fields: [companyId], references: [id])
+  users     User[]
+}
+
+enum UserRole {
+  admin
+  collaborator
+}
+
+model User {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  registration String   @unique
+  email        String
+  password     String
+  role         UserRole
+  createdAt    DateTime @default(now())
+
+  companyId String  @db.ObjectId
+  company   Company @relation(fields: [companyId], references: [id])
+
+  representativeId String?        @db.ObjectId
+  representative   Representative? @relation(fields: [representativeId], references: [id])
 }
