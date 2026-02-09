@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -13,7 +12,7 @@ model Company {
   nameReason  String
   nameFantasy String
   cnpj        String   @unique
-  email       String   @unique
+  email       String?   @unique
   typeBranch  String
   createdAt   DateTime @default(now())
 
