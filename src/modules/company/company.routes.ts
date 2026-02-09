@@ -1,6 +1,9 @@
 import { Router } from "express";
-import { registerComapny } from "./company.controller";
+import { registerCompany } from "./company.controller";
 
 export const companyRoutes = Router();
 
-companyRoutes.post("/register",registerComapny);
+companyRoutes.options("/companies", (req, res) => {
+  res.sendStatus(200);
+});
+companyRoutes.post("/companies",registerCompany);
