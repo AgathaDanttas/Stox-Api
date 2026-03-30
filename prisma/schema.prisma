@@ -3,16 +3,132 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
-
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
-
 model Company {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  email     String   @unique
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  nameReason  String
+  nameFantasy String
+  cnpj        String   @unique
+  typeBranch  String
+  email       String   @unique
+  createdAt   DateTime @default(now())
+  representatives Representative[]
+  users User[]
+  products Product[]
+  suppliers Supplier[]
+  categories Category[]
+  customFields CustomField[]
+}
+
+model Representative{
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  email String
+  phone String
+  position String
+  company Company @relation(fields: [companyId], references:[id])
+  companyId String @db.ObjectId
+
+}
+
+enum UserRole{
+  ADMIN
+  COLLABORATOR
+}
+
+model User{
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  email String @unique
+  password String
+  profile UserRole
+  company Company @relation(fields: [companyId], references: [id])
+  companyId String
   createdAt DateTime @default(now())
 }
+
+type CustomFieldValue {
+  fieldId String
+  value   String
+}
+
+model Supplier {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String
+  phone     String
+  companyId String   @db.ObjectId
+  company   Company  @relation(fields: [companyId], references: [id])
+  products  Product[]
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  color     String
+  companyId String   @db.ObjectId
+  company   Company  @relation(fields: [companyId], references: [id])
+  products  Product[]
+  createdAt DateTime @default(now())
+}
+
+model CustomField {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  type      String   // "text", "number", "date"
+  isGlobal  Boolean  @default(false)
+  companyId String   @db.ObjectId
+  company   Company  @relation(fields: [companyId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  barcode       String?  @unique
+  brand         String?
+  description   String?
+  
+  quantity      Int      @default(0)
+  purchasePrice Float    @default(0.0)
+  salePrice     Float    @default(0.0)
+  
+  minStock      Int      @default(0)
+  maxStock      Int      @default(0)
+  location      String?
+
+  customFields  CustomFieldValue[]
+
+  supplierId    String?  @db.ObjectId
+  supplier      Supplier?  @relation(fields: [supplierId], references: [id])
+  
+  categoryId    String?  @db.ObjectId
+  category      Category?  @relation(fields: [categoryId], references: [id])
+  
+  companyId     String   @db.ObjectId
+  company       Company  @relation(fields: [companyId], references: [id])
+  
+  batches       Batch[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Batch {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  batchNumber String
+  quantity    Int
+  expiresAt   DateTime?
+  
+  productId   String    @db.ObjectId
+  product     Product   @relation(fields: [productId], references: [id])
+  
+  companyId   String    @db.ObjectId
+  createdAt   DateTime  @default(now())
+}
+
