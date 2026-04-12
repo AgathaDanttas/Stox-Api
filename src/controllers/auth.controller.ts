@@ -11,8 +11,13 @@ export async function loginCompany(req: Request, res: Response): Promise<any> {
       return res.status(400).json({ error: "Email (Matrícula) e senha são obrigatórios." });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email },
+          { matricula: email } // In case the user typed their matricula in the email field
+        ]
+      },
       include: { company: true }
     });
 

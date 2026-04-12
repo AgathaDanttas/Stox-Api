@@ -1,4 +1,4 @@
-import { PrismaClient } from "./src/generated/prisma";
+import { PrismaClient } from "./generated/prisma";
 const prisma = new PrismaClient();
 
 const mockCompanyId = "000000000000000000000000";

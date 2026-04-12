@@ -22,6 +22,8 @@ model Company {
   suppliers Supplier[]
   categories Category[]
   customFields CustomField[]
+  auditLogs AuditLog[]
+  messages Message[]
 }
 
 model Representative{
@@ -41,13 +43,16 @@ enum UserRole{
 }
 
 model User{
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  name String
-  email String @unique
-  password String
-  profile UserRole
-  company Company @relation(fields: [companyId], references: [id])
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique
+  matricula String?
+  password  String
+  profile   UserRole
+  company   Company  @relation(fields: [companyId], references: [id])
   companyId String
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
   createdAt DateTime @default(now())
 }
 
@@ -129,6 +134,56 @@ model Batch {
   product     Product   @relation(fields: [productId], references: [id])
   
   companyId   String    @db.ObjectId
+  
   createdAt   DateTime  @default(now())
 }
+
+enum ActionType {
+  CREATE
+  UPDATE
+  DELETE
+  DEACTIVATE
+  ACTIVATE
+}
+
+enum EntityType {
+  PRODUCT
+  SUPPLIER
+  USER
+  CATEGORY
+}
+
+model AuditLog {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  action      ActionType
+  entity      EntityType
+  entityId    String      @db.ObjectId
+  description String
+  reason      String?
+  
+  userName    String
+  userEmail   String?
+  
+  companyId   String      @db.ObjectId
+  company     Company     @relation(fields: [companyId], references: [id])
+  
+  createdAt   DateTime    @default(now())
+}
+
+model Message {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  text      String
+  
+  userId    String   @db.ObjectId
+  user      User     @relation("SentMessages", fields: [userId], references: [id])
+  
+  receiverId String?  @db.ObjectId
+  receiver   User?    @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  companyId String   @db.ObjectId
+  company   Company  @relation(fields: [companyId], references: [id])
+  
+  createdAt DateTime @default(now())
+}
+
 

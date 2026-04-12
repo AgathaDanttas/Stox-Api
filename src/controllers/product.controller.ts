@@ -12,7 +12,8 @@ export async function createProduct(req: Request, res: Response) {
     if (!data.name || !data.companyId) {
       return res.status(400).json({ error: "Nome e companyId são obrigatórios." });
     }
-    const product = await createProductService(data);
+    const userName = (req.headers["x-user-name"] as string) || "Sistema";
+    const product = await createProductService(data, userName);
     return res.status(201).json(product);
   } catch (error: any) {
     console.error("Erro no createProduct:", error);
@@ -38,7 +39,8 @@ export async function updateProduct(req: Request, res: Response) {
   try {
     const { id } = req.params;
     const data = req.body;
-    const product = await updateProductService(id as string, data);
+    const userName = (req.headers["x-user-name"] as string) || "Sistema";
+    const product = await updateProductService(id as string, data, userName);
     return res.status(200).json(product);
   } catch (error: any) {
     console.error("Erro no updateProduct:", error);
@@ -49,7 +51,8 @@ export async function updateProduct(req: Request, res: Response) {
 export async function deleteProduct(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    await deleteProductService(id as string);
+    const userName = (req.headers["x-user-name"] as string) || "Sistema";
+    await deleteProductService(id as string, userName);
     return res.status(200).json({ message: "Produto excluído com sucesso" });
   } catch (error: any) {
     console.error("Erro no deleteProduct:", error);

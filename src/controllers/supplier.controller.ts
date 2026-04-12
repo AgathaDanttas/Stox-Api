@@ -7,7 +7,8 @@ export async function createSupplier(req: Request, res: Response) {
     if (!data.name || !data.email || !data.companyId) {
       return res.status(400).json({ error: "Nome, email e companyId são obrigatórios." });
     }
-    const supplier = await createSupplierService(data);
+    const userName = (req.headers["x-user-name"] as string) || "Sistema";
+    const supplier = await createSupplierService(data, userName);
     return res.status(201).json(supplier);
   } catch (error: any) {
     return res.status(400).json({ error: error.message || "Erro ao criar fornecedor" });

@@ -3,7 +3,7 @@ import { PrismaClient } from "../generated/prisma";
 const prisma = new PrismaClient();
 
 export class BatchService {
-  async createBatch(productId: string, companyId: string, data: any) {
+  async createBatch(productId: string, companyId: string, data: any, userName: string) {
     // 1. Create the batch
     const batch = await prisma.batch.create({
       data: {
@@ -23,6 +23,19 @@ export class BatchService {
       }
     });
 
+    // 3. Register movement
+    await prisma.auditLog.create({
+      data: {
+        action: "UPDATE",
+        entity: "PRODUCT",
+        entityId: productId,
+        description: `Entrada de estoque via novo lote (${batch.batchNumber})`,
+        reason: "Reposição/Entrada",
+        userName: userName,
+        companyId
+      }
+    });
+
     return batch;
   }
 
@@ -33,7 +46,7 @@ export class BatchService {
     });
   }
 
-  async deleteBatch(id: string, companyId: string) {
+  async deleteBatch(id: string, companyId: string, userName: string) {
     const batch = await prisma.batch.findUnique({ where: { id, companyId } });
     if (!batch) throw new Error("Lote não encontrado.");
 
@@ -42,6 +55,19 @@ export class BatchService {
       where: { id: batch.productId },
       data: {
         quantity: { decrement: batch.quantity }
+      }
+    });
+
+    // Register movement OUT
+    await prisma.auditLog.create({
+      data: {
+        action: "UPDATE",
+        entity: "PRODUCT",
+        entityId: batch.productId,
+        description: `Saída de estoque via remoção de lote (${batch.batchNumber})`,
+        reason: "Exclusão manual de lote",
+        userName: userName,
+        companyId
       }
     });
 

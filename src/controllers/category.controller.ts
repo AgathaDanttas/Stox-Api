@@ -7,7 +7,8 @@ export async function createCategory(req: Request, res: Response) {
     if (!data.name || !data.companyId || !data.color) {
       return res.status(400).json({ error: "Nome, cor e companyId são obrigatórios." });
     }
-    const category = await createCategoryService(data);
+    const userName = (req.headers["x-user-name"] as string) || "Sistema";
+    const category = await createCategoryService(data, userName);
     return res.status(201).json(category);
   } catch (error: any) {
     return res.status(400).json({ error: error.message || "Erro ao criar categoria" });

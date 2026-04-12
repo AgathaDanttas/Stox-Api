@@ -1,6 +1,6 @@
 import { prisma } from "../lib/prisma";
 
-export async function createProductService(data: any) {
+export async function createProductService(data: any, userName: string) {
   const product = await prisma.product.create({
     data: {
       name: data.name,
@@ -24,9 +24,22 @@ export async function createProductService(data: any) {
     },
   });
 
+  // Record product creation log
+  await prisma.auditLog.create({
+    data: {
+      action: "CREATE",
+      entity: "PRODUCT",
+      entityId: product.id,
+      description: `Criação do produto: ${product.name}`,
+      reason: "Cadastro",
+      userName: userName, 
+      companyId: data.companyId
+    }
+  });
+
   const quantity = Number(data.quantity) || 0;
   if (quantity > 0) {
-    await prisma.batch.create({
+    const batch = await prisma.batch.create({
       data: {
         batchNumber: "L-" + Date.now().toString().slice(-6),
         quantity: quantity,
@@ -56,7 +69,7 @@ export async function getProductsService(companyId: string) {
   return products;
 }
 
-export async function updateProductService(id: string, data: any) {
+export async function updateProductService(id: string, data: any, userName: string) {
   const product = await prisma.product.update({
     where: { id },
     data: {
@@ -79,13 +92,41 @@ export async function updateProductService(id: string, data: any) {
       customFields: data.customFields
     },
   });
+
+  await prisma.auditLog.create({
+    data: {
+      action: "UPDATE",
+      entity: "PRODUCT",
+      entityId: product.id,
+      description: `Atualização do produto: ${product.name}`,
+      reason: "Edição de cadastro via Dashboard",
+      userName: userName,
+      companyId: product.companyId
+    }
+  });
+
   return product;
 }
+export async function deleteProductService(id: string, userName: string) {
+  const product = await prisma.product.findUnique({ where: { id }});
+  if (!product) return { success: false };
 
-export async function deleteProductService(id: string) {
   await prisma.batch.deleteMany({ where: { productId: id }});
   await prisma.product.delete({
     where: { id },
   });
+
+  await prisma.auditLog.create({
+    data: {
+      action: "DELETE",
+      entity: "PRODUCT",
+      entityId: id,
+      description: `Exclusão do produto: ${product.name}`,
+      reason: "Não informado", // Optionally handled from client side
+      userName: userName,
+      companyId: product.companyId
+    }
+  });
+
   return { success: true };
 }
